@@ -8,7 +8,7 @@ import 'package:flutter_provider_app/models/subreddit_info/subreddit_information
 import 'package:http/http.dart' as http;
 
 class FeedProvider with ChangeNotifier {
-  final SecureStorageHelper _storageHelper = new SecureStorageHelper();
+  final SecureStorageHelper _storageHelper = SecureStorageHelper.instance;
 
   PostsFeedEntity _postFeed;
   SubredditInformationEntity _subredditInformationEntity;
@@ -27,29 +27,42 @@ class FeedProvider with ChangeNotifier {
   CurrentPage _currentPage;
 
   bool get subredditInformationError => _subInformationLoadingError;
+
   bool get feedInformationError => _feedInformationLoadingError;
 
   ViewState get partialState => _partialState;
+
   ViewState get state => _state;
+
   ViewState get loadMorePostsState => _loadMorePostsState;
 
   PostsFeedEntity get postFeed => _postFeed;
+
   SubredditInformationEntity get subredditInformationEntity =>
       _subredditInformationEntity;
+
   CurrentPage get currentPage => _currentPage;
 
   bool get subLoadingError => _subLoadingError;
 
   FeedProvider() {
-    _currentPage = CurrentPage.FrontPage;
-    fetchPostsListing();
+    initProvider().then((value) {
+      _currentPage = CurrentPage.FrontPage;
+      fetchPostsListing();
+    });
   }
 
   FeedProvider.openFromName(String currentSubreddit) {
-    _currentPage = CurrentPage.Other;
-    _subLoadingError = false;
+    initProvider().then((value) {
+      _currentPage = CurrentPage.Other;
+      _subLoadingError = false;
 
-    fetchPostsListing(currentSubreddit: currentSubreddit);
+      fetchPostsListing(currentSubreddit: currentSubreddit);
+    });
+  }
+
+  Future<void> initProvider() async {
+    await _storageHelper.init();
   }
 
   Future<void> fetchPostsListing({
@@ -60,8 +73,6 @@ class FeedProvider with ChangeNotifier {
     await _storageHelper.init();
     _state = ViewState.Busy;
     notifyListeners();
-
-    await _storageHelper.fetchData();
 
     this.sub = currentSubreddit;
     this.sort = currentSort;

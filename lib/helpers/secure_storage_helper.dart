@@ -1,53 +1,47 @@
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../secrets.dart';
 
 class SecureStorageHelper {
-  final _storage = new FlutterSecureStorage();
-  Map<String, dynamic> map = new Map();
+  SecureStorageHelper._privateConstructor() {
+    this.init();
+  }
 
-  SecureStorageHelper();
+  static final SecureStorageHelper instance =
+      SecureStorageHelper._privateConstructor();
+
+  SharedPreferences prefs;
+
   Future<void> init() async {
-    await fetchData();
+    prefs = await SharedPreferences.getInstance();
   }
 
-  Future<String> get authToken async {
-    return map['authToken'];
+  String get authToken {
+    return prefs.getString('authToken') ?? "";
   }
 
-  String get debugprint => map.toString();
-
-  Future<String> get refreshToken async {
-    await fetchData();
-    return map['refreshToken'];
+  String get refreshToken {
+    return prefs.getString("refreshToken") ?? "";
   }
 
-  Future<String> get lastTokenRefresh async {
-    await fetchData();
-    return map['lastTokenRefresh'];
+  String get lastTokenRefresh {
+    return prefs.getString('lastTokenRefresh') ?? "";
   }
 
   bool get signInStatus {
-    // print("storage helper: signin status: map key check" +
-//        map.containsKey('signedIn').toString());
-    if (map.containsKey('signedIn') && map['signedIn'] == "true") {
-      return true;
+    if (prefs != null) {
+      return prefs.getBool('signedIn') ?? false;
     } else {
-      print('not signed in');
-
       return false;
     }
   }
 
   Future<bool> needsTokenRefresh() async {
     Duration time =
-        (DateTime.now()).difference(DateTime.parse(await lastTokenRefresh));
-    // print("Time since last token refresh: " + time.inMinutes.toString());
-    // print(await authToken);
+        (DateTime.now()).difference(DateTime.parse(lastTokenRefresh));
     if (time.inMinutes > 30) {
       return true;
     } else {
@@ -61,50 +55,29 @@ class SecureStorageHelper {
     String lastTokenRefresh,
     bool signedIn,
   ) async {
-    await _storage.write(key: "authToken", value: authToken);
-    await _storage.write(key: "refreshToken", value: refreshToken);
-    await _storage.write(key: "signedIn", value: signedIn.toString());
-    await _storage.write(
-      key: "lastTokenRefresh",
-      value: DateTime.now().toIso8601String(),
-    );
-    // print("Storage helper: Update Credentials : " + map.toString());
-    await fetchData();
-    // print("Storage helper: Update Credentials : " + map.toString());
+    await prefs.setString("authToken", authToken);
+    await prefs.setString("refreshToken", refreshToken);
+    await prefs.setBool("signedIn", signedIn);
+    await prefs.setString("lastTokenRefresh", DateTime.now().toIso8601String());
   }
 
   Future<void> updateAuthToken(String accessToken) async {
-    map['authToken'] = accessToken;
-    await _storage.write(key: 'authToken', value: accessToken);
-    await _storage.write(
-      key: 'lastTokenRefresh',
-      value: DateTime.now().toIso8601String(),
+    await prefs.setString("authToken", accessToken);
+    await prefs.setString(
+      'lastTokenRefresh',
+      DateTime.now().toIso8601String(),
     );
-    await _storage.write(
-      key: 'signedIn',
-      value: true.toString(),
+    await prefs.setString(
+      'signedIn',
+      true.toString(),
     );
-  }
-
-  Future<void> fetchData() async {
-    if (Platform.operatingSystem != null) {
-      print('before');
-      map = await _storage.readAll();
-      print('after');
-    } else {
-      print("skip init");
-      map = new Map();
-    }
   }
 
   Future<void> clearStorage() async {
-    map = new Map<String, dynamic>();
-    await _storage.deleteAll();
-    await fetchData();
+    await prefs.clear();
   }
 
   Future<void> performTokenRefresh() async {
-    // print("******* PERFORMING A TOKEN REFRESH *****");
     String user = CLIENT_ID;
     String password = "";
     String basicAuth = "Basic " + base64Encode(utf8.encode('$user:$password'));
@@ -115,20 +88,16 @@ class SecureStorageHelper {
         "Authorization": basicAuth,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: "grant_type=refresh_token&refresh_token=${await refreshToken}",
+      body: "grant_type=refresh_token&refresh_token=${refreshToken}",
     )
         .catchError((e) {
       this.clearStorage();
     });
 
-    // print("Token refresh status code: " + response.statusCode.toString());
     if (response.statusCode == 200) {
       Map<String, dynamic> map = json.decode(response.body);
       // print("Refreshed token: " + map.toString());
       await updateAuthToken(map['access_token']);
-    } else {
-      // print("Failed to refresh token");
-      // print(json.decode(response.body));
-    }
+    } else {}
   }
 }

@@ -14,7 +14,8 @@ import 'package:http/http.dart' as http;
 
 class UserInformationProvider with ChangeNotifier {
   HttpServer server;
-  final _storageHelper = new SecureStorageHelper();
+
+  final _storageHelper = SecureStorageHelper.instance;
 
   bool get signedIn => _storageHelper.signInStatus;
 
@@ -28,10 +29,17 @@ class UserInformationProvider with ChangeNotifier {
 
   UserInformationProvider() {
     print("UserInformationProvider-> Constructor()");
-    validateAuthentication();
+    initProvider().then((value) => {validateAuthentication()});
   }
 
   ViewState get state => _state;
+
+  Future<void> initProvider() async {
+    _state = ViewState.Busy;
+    notifyListeners();
+
+    await _storageHelper.init();
+  }
 
   Future<void> performTokenRefresh() async {
     print("UserInformationProvider-> PerformTokenRefresh()");
@@ -45,7 +53,7 @@ class UserInformationProvider with ChangeNotifier {
     notifyListeners();
     print("UserInformationProvider-> ValidateAuth() -> Update state -> busy");
 
-    if (_storageHelper.signInStatus) {
+    if (_storageHelper.signInStatus ?? false) {
       print("UserInformationProvider-> ValidateAuth() <- User is Signed in");
       await _storageHelper.performTokenRefresh();
       await loadUserInformation();

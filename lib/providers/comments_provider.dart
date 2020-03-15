@@ -21,11 +21,8 @@ class CommentsProvider with ChangeNotifier {
   Map<String, List<CommentPojo.Child>> commentsMap = {};
 
   String moreParentLoadingId = "";
-  SecureStorageHelper _storageHelper;
 
-  CommentsProvider() {
-    _storageHelper = new SecureStorageHelper();
-  }
+  CommentsProvider() {}
 
   Future<void> fetchComments({
     @required String subredditName,
@@ -35,6 +32,10 @@ class CommentsProvider with ChangeNotifier {
   }) async {
     _commentsLoadingState = ViewState.Busy;
     notifyListeners();
+
+    final _storageHelper = SecureStorageHelper.instance;
+    await _storageHelper.init();
+
     if (requestingRefresh || commentsMap[postId] == null) {
       await _storageHelper.init();
       String authToken = await _storageHelper.authToken;
@@ -133,6 +134,9 @@ class CommentsProvider with ChangeNotifier {
     _commentsMoreLoadingState = ViewState.Busy;
     moreParentLoadingId = moreParentId;
     notifyListeners();
+
+    final _storageHelper = SecureStorageHelper.instance;
+    await _storageHelper.init();
 
     if (await _storageHelper.needsTokenRefresh()) {
       _storageHelper.performTokenRefresh();
@@ -295,7 +299,6 @@ class CommentsProvider with ChangeNotifier {
 
   Future<bool> voteComment(
       {@required int index, @required int dir, @required postId}) async {
-    await _storageHelper.fetchData();
     CommentPojo.Child item = commentsMap[postId].elementAt(index);
     notifyListeners();
     if (item.data.likes == true) {
@@ -315,6 +318,10 @@ class CommentsProvider with ChangeNotifier {
       item.data.likes = null;
     }
     String url = "https://oauth.reddit.com/api/vote";
+
+    final _storageHelper = SecureStorageHelper.instance;
+    _storageHelper.init();
+
     final String authToken = await _storageHelper.authToken;
     // // print(authToken);
     http.Response voteResponse;

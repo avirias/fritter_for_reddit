@@ -8,7 +8,7 @@ import 'package:flutter_provider_app/models/states.dart';
 import 'package:http/http.dart' as http;
 
 class SearchProvider with ChangeNotifier {
-  final SecureStorageHelper _secureStorageHelper = new SecureStorageHelper();
+  final SecureStorageHelper _secureStorageHelper = SecureStorageHelper.instance;
 
   ViewState _subredditQueryLoadingState = ViewState.Idle;
   ViewState _postsQueryLoadingState = ViewState.Idle;
