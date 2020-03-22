@@ -8,7 +8,8 @@ import 'package:flutter_provider_app/models/subreddit_info/subreddit_information
 import 'package:http/http.dart' as http;
 
 class FeedProvider with ChangeNotifier {
-  final SecureStorageHelper _storageHelper = SecureStorageHelper.instance;
+  final AuthenticationPersistenceHelper _storageHelper =
+      AuthenticationPersistenceHelper.instance;
 
   PostsFeedEntity _postFeed;
   SubredditInformationEntity _subredditInformationEntity;

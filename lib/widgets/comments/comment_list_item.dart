@@ -185,11 +185,9 @@ class CommentBody extends StatelessWidget {
               PinnedCommentTag(platformBrightness: _platformBrightness),
 
             // author tag
-            Flexible(
-              child: AuthorTag(
-                comment: comment,
-                platformBrightness: _platformBrightness,
-              ),
+            AuthorTag(
+              comment: comment,
+              platformBrightness: _platformBrightness,
             ),
 
             //comment body
@@ -252,7 +250,7 @@ class AuthorTag extends StatelessWidget {
   Widget build(BuildContext context) {
     // Add OP Tag
     return Padding(
-      padding: const EdgeInsets.only(top: 4.0, bottom: 4.0, left: 2),
+      padding: const EdgeInsets.only(top: 6.0, bottom: 6.0, left: 2.0),
       child: Wrap(
         children: <Widget>[
           if (comment.data.isSubmitter)
@@ -274,10 +272,10 @@ class AuthorTag extends StatelessWidget {
                   style: comment.data.isSubmitter
                       ? Theme.of(context).textTheme.caption.copyWith(
                             color: Theme.of(context).accentColor,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           )
                       : Theme.of(context).textTheme.caption.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                 ),
                 comment.data.distinguished.toString().compareTo("moderator") ==

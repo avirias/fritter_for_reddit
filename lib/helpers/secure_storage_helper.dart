@@ -5,18 +5,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../secrets.dart';
 
-class SecureStorageHelper {
-  SecureStorageHelper._privateConstructor() {
-    this.init();
+class AuthenticationPersistenceHelper {
+  AuthenticationPersistenceHelper._privateConstructor() {
+    print("AuthenticationPersistenceHelper initializing");
+    init().then((value) {
+      print("AuthenticationPersistenceHelper initialized");
+    });
   }
 
-  static final SecureStorageHelper instance =
-      SecureStorageHelper._privateConstructor();
+  static final AuthenticationPersistenceHelper instance =
+      AuthenticationPersistenceHelper._privateConstructor();
 
   SharedPreferences prefs;
 
   Future<void> init() async {
+    print("AuthenticationPersistenceHelper initializing prefs");
     prefs = await SharedPreferences.getInstance();
+    print("AuthenticationPersistenceHelper initialized prefs");
   }
 
   String get authToken {
@@ -32,11 +37,10 @@ class SecureStorageHelper {
   }
 
   bool get signInStatus {
-    if (prefs != null) {
-      return prefs.getBool('signedIn') ?? false;
-    } else {
-      return false;
-    }
+    final bool result =
+        prefs != null ? prefs.getBool('signedIn') ?? false : false;
+    print(result);
+    return result;
   }
 
   Future<bool> needsTokenRefresh() async {
@@ -67,9 +71,9 @@ class SecureStorageHelper {
       'lastTokenRefresh',
       DateTime.now().toIso8601String(),
     );
-    await prefs.setString(
+    await prefs.setBool(
       'signedIn',
-      true.toString(),
+      true,
     );
   }
 

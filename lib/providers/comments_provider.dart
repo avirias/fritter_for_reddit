@@ -33,7 +33,7 @@ class CommentsProvider with ChangeNotifier {
     _commentsLoadingState = ViewState.Busy;
     notifyListeners();
 
-    final _storageHelper = SecureStorageHelper.instance;
+    final _storageHelper = AuthenticationPersistenceHelper.instance;
     await _storageHelper.init();
 
     if (requestingRefresh || commentsMap[postId] == null) {
@@ -135,7 +135,7 @@ class CommentsProvider with ChangeNotifier {
     moreParentLoadingId = moreParentId;
     notifyListeners();
 
-    final _storageHelper = SecureStorageHelper.instance;
+    final _storageHelper = AuthenticationPersistenceHelper.instance;
     await _storageHelper.init();
 
     if (await _storageHelper.needsTokenRefresh()) {
@@ -319,7 +319,7 @@ class CommentsProvider with ChangeNotifier {
     }
     String url = "https://oauth.reddit.com/api/vote";
 
-    final _storageHelper = SecureStorageHelper.instance;
+    final _storageHelper = AuthenticationPersistenceHelper.instance;
     _storageHelper.init();
 
     final String authToken = await _storageHelper.authToken;
